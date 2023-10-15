@@ -27,7 +27,7 @@ li=[]
 #handeling start command
 async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
     author=update.message.from_user.first_name
-    reply="🙏HARI OM🙏\n\n Hi! 👋 {}\n\n Let me first give you a breif intrdouction about me!😃".format(author)
+    reply="Hi! 👋 {}\n\n This is Testing phase one😃".format(author)
     await context.bot.send_message(chat_id=update.effective_chat.id,text=reply)
     # li=[]
     li.append(author)
