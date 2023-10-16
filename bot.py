@@ -1,3 +1,4 @@
+from transformers import pipeline
 import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler,MessageHandler,filters
@@ -20,13 +21,6 @@ li=[]
 i=1
 
 
-# # Use a pipeline as a high-level helper
-# from transformers import pipeline
-
-# pipe = pipeline("text-classification", model="unitary/toxic-bert")
-
-
-
 #handeling start command
 async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
     author=update.message.from_user.first_name
@@ -45,17 +39,37 @@ async def help(update:Update,context : ContextTypes.DEFAULT_TYPE):
 async def reply_text(update:Update,context : ContextTypes.DEFAULT_TYPE ):
     global i
     author=update.message.from_user.first_name
-    for entity in update.message.entities:
-        if entity['type'] == 'url':
-            reply="This is warning {}.  {} Sending links are not allowed".format(i,author)
+    if len(update.message.entities):
+        
+        for entity in update.message.entities:
+            if entity['type'] == 'url':
+                reply="This is warning {}.  {} Sending links are not allowed".format(i,author)
+                if i==3:
+                    await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
+                    await context.bot.send_message(chat_id=update.effective_chat.id,text="You voilated our rules")
+                    await context.bot.ban_chat_member(chat_id=update.effective_chat.id, user_id=update.message.from_user.id)
+                else:
+                    i=i+1
+                    await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
+                    await context.bot.send_message(chat_id=update.effective_chat.id,text=reply)
+    else:
+        # Use a pipeline as a high-level helper
+        pipe = pipeline("text-classification", model="unitary/toxic-bert")
+        print(pipe(update.message.text))
+        print(type(pipe(update.message.text)))
+        print(pipe(update.message.text)[0])
+        print(type(pipe(update.message.text)[0]))
+        if pipe(update.message.text)[0]['score']>0.9:
+            reply="This is warning {}.  {} please donot use abusive words!".format(i,author)
             if i==3:
-                await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
-                await context.bot.send_message(chat_id=update.effective_chat.id,text="You voilated our rules")
-                await context.bot.ban_chat_member(chat_id=update.effective_chat.id, user_id=update.message.from_user.id)
+                    await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
+                    await context.bot.send_message(chat_id=update.effective_chat.id,text="You voilated our rules")
+                    await context.bot.ban_chat_member(chat_id=update.effective_chat.id, user_id=update.message.from_user.id)
             else:
                 i=i+1
                 await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
                 await context.bot.send_message(chat_id=update.effective_chat.id,text=reply)
+
 
 # stickers
 async def echo_sticker(update:Update,context : ContextTypes.DEFAULT_TYPE):
