@@ -1,2 +1,3 @@
 telegram
 pandas
+transformers
