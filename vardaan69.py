@@ -105,7 +105,7 @@ async def reply_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(type(pipe(update.message.text)[0]))
         if pipe(update.message.text)[0]['score'] > 0.9:
             reply = "This is warning {}.  {} please don't use abusive words!".format(
-                warnings, author)
+                warnings+1, author)
             database[colletion_name].update_one(
                 {"user_id": update.message.from_user.id},
                 {"$set": {
@@ -120,7 +120,6 @@ async def reply_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                                   user_id=update.message.from_user.id)
                 database[colletion_name].delete_one({"user_id": update.message.from_user.id})
             else:
-                warnings += 1
                 await context.bot.delete_message(chat_id=update.effective_chat.id,
                                                  message_id=update.message.message_id)
                 await context.bot.send_message(chat_id=update.effective_chat.id,
@@ -142,14 +141,14 @@ async def echo_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = database[colletion_name].find_one(
         {"user_id": update.message.from_user.id})
     if not user_data:
-        user_data = {"user_id": update.message.from_user.id, "warnings": 0}
+        user_data = {"user_id": update.message.from_user.id,"user_name":author, "warnings": 0}
         database[colletion_name].insert_one(user_data)
 
     warnings = user_data["warnings"]
 
     # Your existing code for handling stickers...
     reply = "This is warning {}.  {} Sending stickers are not allowed".format(
-        warnings , author)
+        warnings+1 , author)
     if warnings > 2:
         await context.bot.delete_message(chat_id=update.effective_chat.id,
                                          message_id=update.message.message_id)
@@ -159,7 +158,6 @@ async def echo_sticker(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                           user_id=update.message.from_user.id)
         database[colletion_name].delete_one({"user_id": update.message.from_user.id})
     else:
-        warnings += 1
         await context.bot.delete_message(chat_id=update.effective_chat.id,
                                          message_id=update.message.message_id)
         await context.bot.send_message(chat_id=update.effective_chat.id,
