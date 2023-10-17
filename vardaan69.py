@@ -103,7 +103,7 @@ async def reply_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(type(pipe(update.message.text)))
         print(pipe(update.message.text)[0])
         print(type(pipe(update.message.text)[0]))
-        if pipe(update.message.text)[0]['score'] > 0.9:
+        if pipe(update.message.text)[0]['score'] > 0.85:
             reply = "This is warning {}.  {} please don't use abusive words!".format(
                 warnings+1, author)
             database[colletion_name].update_one(
