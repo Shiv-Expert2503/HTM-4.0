@@ -1,3 +1,10 @@
-telegram
-pandas
+python-telegram-bot
 transformers
+torch
+torchvision
+torchaudio
+pymongo
+sounddevice
+numpy
+librosa
+requests
