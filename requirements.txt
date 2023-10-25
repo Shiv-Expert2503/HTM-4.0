@@ -8,3 +8,7 @@ sounddevice
 numpy
 librosa
 requests
+pyaudio
+Copy code
+pydub
+ffmpeg-downloader
