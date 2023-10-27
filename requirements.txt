@@ -9,6 +9,7 @@ numpy
 librosa
 requests
 pyaudio
-Copy code
 pydub
 ffmpeg-downloader
+SpeechRecognition
+googletrans-py
