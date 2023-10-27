@@ -9,3 +9,7 @@ After that run the command -->ffdl install --add-path
 Replace your telegram bot id
 Setup the mongo db connection
 Now just run vardaan69.py and enjoy the bot
+
+
+Just added HTM_Final Which is our final project file
+It contains code of translate command also which is 80%done
