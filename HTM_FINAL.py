@@ -5,7 +5,7 @@ import requests
 import speech_recognition as sr
 from googletrans import Translator
 from pydub import AudioSegment
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters, CallbackContext, \
     ConversationHandler
 from transformers import pipeline
@@ -17,9 +17,10 @@ from logger import logging
 
 li = []
 i = 1
-
+all_topics = [['/start', '/help', '/translate'], ['/translate_voice', '/voice_to_text', '/audio_to_text'],
+              ['languages_available']]
 uri = "mongodb+srv://shivansh1:A5Jgkddd8*dhSSb@cluster0.yc3hy9y.mongodb.net/?retryWrites=true&w=majority"
-db_name = "coders-magloo-ke"
+db_name = "coders-magglu-kee"
 # Create a new client and connect to the server
 client = pymongo.MongoClient(uri)
 database = client[db_name]
@@ -60,6 +61,12 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text="Can't help at this moment kindly contact Shivansh personally!")
 
 
+async def command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(all_topics)
+    await context.bot.send_message(chat_id=update.effective_chat.id, text='Here are all the commands',
+                                   reply_markup=ReplyKeyboardMarkup(keyboard=all_topics, one_time_keyboard=True))
+
+
 # Handling translate command
 async def translate(update: Update, context: CallbackContext):
     await update.message.reply_text("Please enter the text:")
@@ -92,6 +99,36 @@ async def get_text(update: Update, context: CallbackContext):
     except ValueError:
         await update.message.reply_text("Invalid inputs.")
     return ConversationHandler.END
+
+
+async def report(update: Update, context: CallbackContext):
+    await update.message.reply_text("Enter the username: ")
+    return "GET_USERNAME"
+
+
+async def make_report(update: Update, context: CallbackContext):
+    #     author = update.message.from_user.first_name
+    author = update.message.from_user.first_name
+    try:
+        username = update.message.text
+        chat = await context.bot.get_chat(username)
+        user_id = chat.id
+        await update.message.reply_text(f"User is {user_id}")
+        user_data = database[colletion_name].find_one(
+            {"user_id": update.message.from_user.id})
+        if not user_data:
+            user_data = {"user_id": update.message.from_user.id, "user_name": author, "warnings": 0}
+            database[colletion_name].insert_one(user_data)
+        warnings = user_data["warnings"]
+        database[colletion_name].update_one(
+        {"user_id": update.message.from_user.id},
+        {"$set": {
+            "warnings": warnings + 1
+        }})
+        print(warnings)
+    except ValueError:
+            await update.message.reply_text("Invalid inputs.")
+            return ConversationHandler.END
 
 
 # message
@@ -140,43 +177,73 @@ async def reply_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             translator = Translator()
             text_to_translate = update.message.text
             detected_language = translator.detect(text_to_translate).lang
+            print(detected_language)
             target_language = 'hi'
-            translated_text = translator.translate(text_to_translate, dest=target_language)
-            print(f"Original Text: {text_to_translate} (Detected Language: {detected_language})")
-            print(f"Translation to {target_language}: {translated_text.text}")
-            # Use a pipeline as a high-level helper
-            # Converting hindi translated text to english for its checking via transformer
-            pipe = pipeline("translation", model="Helsinki-NLP/opus-mt-hi-en")
-            print(pipe(translated_text.text))
+            if detected_language != 'en':
+                translated_text = translator.translate(text_to_translate, dest=target_language)
+                print(f"Original Text: {text_to_translate} (Detected Language: {detected_language})")
+                print(f"Translation to {target_language}: {translated_text.text}")
+                # Use a pipeline as a high-level helper
+                # Converting hindi translated text to english for its checking via transformer
+                pipe = pipeline("translation", model="Helsinki-NLP/opus-mt-hi-en")
+                print(pipe(translated_text.text))
 
-            # Passing translated english text to toxic checking
-            pipe = pipeline("text-classification", model="unitary/toxic-bert")
-            logging.info(f'{pipe(translated_text.text)[0]} by {author}')
-            if pipe(translated_text.text)[0]['score'] > 0.85:
-                reply = "This is warning {}.  {} please don't use abusive words!".format(
-                    warnings + 1, author)
-                database[colletion_name].update_one(
-                    {"user_id": update.message.from_user.id},
-                    {"$set": {
-                        "warnings": warnings + 1
-                    }})
-                if warnings > 2:
-                    try:
+                # Passing translated english text to toxic checking
+                pipe = pipeline("text-classification", model="unitary/toxic-bert")
+                logging.info(f'{pipe(translated_text.text)[0]} by {author}')
+                if pipe(translated_text.text)[0]['score'] > 0.85:
+                    reply = "This is warning {}.  {} please don't use abusive words!".format(
+                        warnings + 1, author)
+                    database[colletion_name].update_one(
+                        {"user_id": update.message.from_user.id},
+                        {"$set": {
+                            "warnings": warnings + 1
+                        }})
+                    if warnings > 2:
+                        try:
+                            await context.bot.delete_message(chat_id=update.effective_chat.id,
+                                                             message_id=update.message.message_id)
+                            await context.bot.send_message(chat_id=update.effective_chat.id,
+                                                           text="You violated our rules")
+                            logging.info(f"Removed {author}")
+                            await context.bot.ban_chat_member(chat_id=update.effective_chat.id,
+                                                              user_id=update.message.from_user.id)
+                            database[colletion_name].delete_one({"user_id": update.message.from_user.id})
+                        except Exception as e:
+                            logging.error(f'Error removing {author}', exc_info=context.error)
+                    else:
                         await context.bot.delete_message(chat_id=update.effective_chat.id,
                                                          message_id=update.message.message_id)
                         await context.bot.send_message(chat_id=update.effective_chat.id,
-                                                       text="You violated our rules")
-                        logging.info(f"Removed {author}")
-                        await context.bot.ban_chat_member(chat_id=update.effective_chat.id,
-                                                          user_id=update.message.from_user.id)
-                        database[colletion_name].delete_one({"user_id": update.message.from_user.id})
-                    except Exception as e:
-                        logging.error(f'Error removing {author}', exc_info=context.error)
-                else:
-                    await context.bot.delete_message(chat_id=update.effective_chat.id,
-                                                     message_id=update.message.message_id)
-                    await context.bot.send_message(chat_id=update.effective_chat.id,
-                                                   text=reply)
+                                                       text=reply)
+            else:
+                pipe = pipeline("text-classification", model="unitary/toxic-bert")
+                logging.info(f'{pipe(update.message.text)[0]} by {author}')
+                if pipe(update.message.text)[0]['score'] > 0.85:
+                    reply = "This is warning {}.  {} please don't use abusive words!".format(
+                        warnings + 1, author)
+                    database[colletion_name].update_one(
+                        {"user_id": update.message.from_user.id},
+                        {"$set": {
+                            "warnings": warnings + 1
+                        }})
+                    if warnings > 2:
+                        try:
+                            await context.bot.delete_message(chat_id=update.effective_chat.id,
+                                                             message_id=update.message.message_id)
+                            await context.bot.send_message(chat_id=update.effective_chat.id,
+                                                           text="You violated our rules")
+                            logging.info(f"Removed {author}")
+                            await context.bot.ban_chat_member(chat_id=update.effective_chat.id,
+                                                              user_id=update.message.from_user.id)
+                            database[colletion_name].delete_one({"user_id": update.message.from_user.id})
+                        except Exception as e:
+                            logging.error(f'Error removing {author}', exc_info=context.error)
+                    else:
+                        await context.bot.delete_message(chat_id=update.effective_chat.id,
+                                                         message_id=update.message.message_id)
+                        await context.bot.send_message(chat_id=update.effective_chat.id,
+                                                       text=reply)
     except Exception as e:
         logging.error(f'Error occurred while handling the text by user {author}', exc_info=context.error)
 
@@ -364,6 +431,8 @@ def main():
     # Making command handler for help
     application.add_handler(CommandHandler('help', help))
 
+    application.add_handler(CommandHandler('command', command))
+
     # Making command handler for translate
     conversation_handler = ConversationHandler(
         entry_points=[CommandHandler('translate', translate)],
@@ -376,12 +445,15 @@ def main():
 
     application.add_handler(conversation_handler)
 
-
-
-    #To be completed by VARDAAN<=============================================================================
-    # application.add_handler(CommandHandler('report',report))
-
-    
+    report_handler = ConversationHandler(
+        entry_points=[CommandHandler('report', report)],
+        states={
+            "GET_USERNAME": [MessageHandler(filters.TEXT & ~filters.COMMAND, make_report)],
+        },
+        fallbacks=[],
+    )
+    # To be completed by VARDAAN<=============================================================================
+    application.add_handler(report_handler)
 
     # Making message handler
     application.add_handler(MessageHandler(filters.TEXT, reply_text))
