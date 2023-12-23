@@ -14,12 +14,12 @@ import speech_recognition as sr
 li = []
 i = 1
 
-uri = "mongodb+srv://shivansh1:A5Jgkddd8*dhSSb@cluster0.yc3hy9y.mongodb.net/?retryWrites=true&w=majority"
-db_name = "coders-magloo-ke"
+uri = "mongodburi"
+db_name = "dbname"
 # Create a new client and connect to the server
 client = pymongo.MongoClient(uri)
 database = client[db_name]
-colletion_name = "harry-puttar"
+colletion_name = "collection_name"
 
 try:
     client.admin.command('ping')
@@ -31,7 +31,7 @@ except Exception as e:
 
 # Initialising Everything
 
-Token = '6644344026:AAHmKqa6mubIGELIZ-7zlFWnjrf6NhCw1nw'
+Token = 'teletoken'
 
 
 async def reply_custom_text(update: Update, context: ContextTypes.DEFAULT_TYPE, text):
