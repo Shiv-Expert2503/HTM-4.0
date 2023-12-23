@@ -19,12 +19,12 @@ li = []
 i = 1
 all_topics = [['/start', '/help', '/translate'], ['/translate_voice', '/audio_to_text'],
               ['/languages_available']]
-uri = "mongodb+srv://shivansh1:A5Jgkddd8*dhSSb@cluster0.yc3hy9y.mongodb.net/?retryWrites=true&w=majority"
-db_name = "coders-magglu-keee"
+uri = "mongodburilink"
+db_name = "databasename"
 # Create a new client and connect to the server
 client = pymongo.MongoClient(uri)
 database = client[db_name]
-colletion_name = "harry-puttar"
+colletion_name = "collection_name"
 
 try:
     client.admin.command('ping')
@@ -36,7 +36,7 @@ except Exception as e:
 
 # Initialising Everything
 
-Token = '6666820551:AAH4qD0_CXR1QacZkW6UXgzI0j5RvchCKhs'
+Token = 'telegrambotid'
 
 
 # handling start command
