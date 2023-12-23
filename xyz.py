@@ -8,15 +8,15 @@
 # url = "https://google-translate1.p.rapidapi.com/language/translate/v2"
 #
 # payload = {
-#     "q": "behenchod",
+#     "q": "abbusiveword",
 #     "target": "en",
 #     "source": "hi"
 # }
 # headers = {
 #     "content-type": "application/x-www-form-urlencoded",
 #     "Accept-Encoding": "application/gzip",
-#     "X-RapidAPI-Key": "fbf9842bd2mshce10357b7b39318p1b91b4jsndaf977b5923c",
-#     "X-RapidAPI-Host": "google-translate1.p.rapidapi.com"
+#     "X-RapidAPI-Key": "appikey",
+#     "X-RapidAPI-Host": "host"
 # }
 #
 # response = requests.post(url, data=payload, headers=headers)
@@ -30,12 +30,12 @@
 # #
 # # url = "https://google-translate1.p.rapidapi.com/language/translate/v2/detect"
 # #
-# # payload = { "q": "randi ka choda" }
+# # payload = { "q": "abusiveword" }
 # # headers = {
 # #     "content-type": "application/x-www-form-urlencoded",
 # #     "Accept-Encoding": "application/gzip",
-# #     "X-RapidAPI-Key": "fbf9842bd2mshce10357b7b39318p1b91b4jsndaf977b5923c",
-# #     "X-RapidAPI-Host": "google-translate1.p.rapidapi.com"
+# #     "X-RapidAPI-Key": "apikey",
+# #     "X-RapidAPI-Host": "host"
 # # }
 # #
 # # response = requests.post(url, data=payload, headers=headers)
